@@ -1,0 +1,16 @@
+export enum TeacherSpecialization {
+  WEB_FRONTEND = 'web_frontend',
+  WEB_BACKEND = 'web_backend',
+  FULLSTACK = 'fullstack',
+  MOBILE = 'mobile',
+  PYTHON = 'python',
+  JAVA = 'java',
+  CPLUS = 'cpp',
+  CYBER_SECURITY = 'cyber_security',
+  UI_UX = 'ui_ux',
+  GRAPHIC_DESIGN = 'graphic_design',
+  DATA_SCIENCE = 'data_science',
+  SMM = 'smm',
+  GAME_DEV = 'game_dev',
+  ROBOTICS = 'robotics',
+}
