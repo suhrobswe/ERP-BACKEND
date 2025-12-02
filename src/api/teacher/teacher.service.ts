@@ -22,6 +22,7 @@ import { TokenService } from 'src/infrastructure/token/Token';
 import { IToken } from 'src/infrastructure/token/interface';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
+import { StatusDto } from './dto/status.dto';
 
 @Injectable()
 export class TeacherService extends BaseService<
@@ -216,6 +217,23 @@ export class TeacherService extends BaseService<
 
     const updatedTeacher = await this.teacherRepo.findOne({ where: { id } });
     return successRes(updatedTeacher);
+  }
+
+  async updateStatusIsActive(id: string, dto: StatusDto) {
+    const teacher = await this.teacherRepo.findOne({ where: { id } });
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher not found');
+    }
+
+    teacher.isActive = dto.isActive;
+
+    await this.teacherRepo.save(teacher);
+
+    return {
+      message: `Teacher status updated to ${dto.isActive ? 'Active' : 'Blocked'}`,
+      teacher,
+    };
   }
 
   async deleteAvatar(id: string): Promise<ISuccess> {

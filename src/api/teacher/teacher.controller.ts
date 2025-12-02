@@ -37,6 +37,7 @@ import { type Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { ApiImageFile } from 'src/common/decorator/upload.decorator';
 import { parse } from 'path';
+import { StatusDto } from './dto/status.dto';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('teacher')
@@ -157,6 +158,13 @@ export class TeacherController {
     @CurrentUser() user: IToken,
   ) {
     return this.teacherService.updatePassword(user.id, updatePasswordDto);
+  }
+
+  @Patch('status/:id')
+  @ApiBearerAuth()
+  @accessRoles(Roles.ADMIN, Roles.SUPER_ADMIN)
+  updateStatus(@Param('id') id: string, @Body() dto: StatusDto) {
+    return this.teacherService.updateStatusIsActive(id, dto);
   }
 
   @Patch('soft-delete/:id')
