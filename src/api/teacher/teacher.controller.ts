@@ -197,7 +197,7 @@ export class TeacherController {
     return this.teacherService.deleteAvatar(user.id);
   }
 
-  @Delete('teacher/:id')
+  @Delete(':id')
   @SwaggerSuccessResponse({
     example: {
       statusCode: 200,

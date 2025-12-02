@@ -20,12 +20,12 @@ import { SpecificationModule } from './api/specification/specification.module';
       isGlobal: true,
     }),
 
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000, // 60 sekund (millisekundda)
-        limit: 10, // Maksimum 10 ta so'rov
-      },
-    ]),
+    // ThrottlerModule.forRoot([
+    //   {
+    //     ttl: 60000, // 60 sekund (millisekundda)
+    //     limit: 10, // Maksimum 10 ta so'rov
+    //   },
+    // ]),
     TypeOrmModule.forRootAsync({
       useFactory: async () => {
         try {
@@ -59,11 +59,11 @@ import { SpecificationModule } from './api/specification/specification.module';
     // VideoModule,
   ],
   controllers: [],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
+  // providers: [
+  //   {
+  //     provide: APP_GUARD,
+  //     useClass: ThrottlerGuard,
+  //   },
+  // ],
 })
 export class AppModule {}
