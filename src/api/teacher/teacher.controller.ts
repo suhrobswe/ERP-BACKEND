@@ -175,6 +175,20 @@ export class TeacherController {
     return this.teacherService.softDelete(id);
   }
 
+    @Patch('update-avatar-teacher/:id')
+  @ApiOperation({ summary: 'Update avatar for admin (Universal Upload)' })
+  @accessRoles(Roles.SUPER_ADMIN, Roles.ADMIN)
+  @ApiBearerAuth()
+  @ApiImageFile('file', true)
+  updateAvatarTeacher(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) throw new HttpException('File is required', 400);
+
+    return this.teacherService.updateAvatar(id, file);
+  }
+
   @Patch('update-avatar')
   @ApiOperation({ summary: 'Update avatar (Universal Upload)' })
   @accessRoles(Roles.TEACHER)

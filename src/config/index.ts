@@ -17,6 +17,7 @@ interface IConfig {
     FULLNAME: string;
   };
   UPLOAD_FOLDER: string;
+  FILE_PATH: string;
 }
 
 export const appConfig: IConfig = {
@@ -35,4 +36,5 @@ export const appConfig: IConfig = {
     FULLNAME: String(process.env.SUPER_ADMIN_FULLNAME),
   },
   UPLOAD_FOLDER: String(process.env.UPLOAD_FOLDER),
+  FILE_PATH: String(process.env.FILE_PATH),
 };

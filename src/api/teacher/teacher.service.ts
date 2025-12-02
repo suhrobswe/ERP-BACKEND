@@ -23,6 +23,7 @@ import { IToken } from 'src/infrastructure/token/interface';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { StatusDto } from './dto/status.dto';
+import { appConfig } from 'src/config';
 
 @Injectable()
 export class TeacherService extends BaseService<
@@ -206,16 +207,25 @@ export class TeacherService extends BaseService<
     const teacher = await this.teacherRepo.findOne({ where: { id } });
     if (!teacher) throw new HttpException('Teacher not found', 404);
 
-    const avatarUrl = join('/uploads', file.filename);
-    const deletedAvatarUrl = join(process.cwd(), teacher.avatarUrl);
+    // Yangi relative URL
+    const relativeUrl = `/uploads/${file.filename}`;
 
-    if (existsSync(deletedAvatarUrl)) {
-      unlinkSync(deletedAvatarUrl);
+    // Full URL frontend uchun
+    const avatarUrl = `http://localhost:4000/api/v1${relativeUrl}`;
+
+    // Eski faylni o'chirish
+    if (teacher.url) {
+      const oldFilePath = join(process.cwd(), teacher.url);
+      if (existsSync(oldFilePath)) {
+        unlinkSync(oldFilePath);
+      }
     }
 
-    await this.teacherRepo.update(id, { avatarUrl });
+    teacher.avatarUrl = avatarUrl;
+    teacher.url = relativeUrl;
 
-    const updatedTeacher = await this.teacherRepo.findOne({ where: { id } });
+    const updatedTeacher = await this.teacherRepo.save(teacher);
+
     return successRes(updatedTeacher);
   }
 

@@ -5,7 +5,10 @@ import { existsSync, mkdirSync } from 'fs';
 import { appConfig } from 'src/config';
 
 // Fayl yuklanadigan asosiy papka
-export const UPLOAD_DESTINATION = join(process.cwd(), appConfig.UPLOAD_FOLDER || 'uploads');
+export const UPLOAD_DESTINATION = join(
+  process.cwd(),
+  appConfig.UPLOAD_FOLDER || 'uploads',
+);
 // Papka borligini tekshirish va yaratish
 export const createDestination = () => {
   if (!existsSync(UPLOAD_DESTINATION)) {
@@ -46,6 +49,6 @@ export const multerOptions = {
   },
   // Hajmni cheklash (masalan 5MB)
   limits: {
-    fileSize: 5 * 1024 * 1024, 
+    fileSize: 5 * 1024 * 1024,
   },
 };
