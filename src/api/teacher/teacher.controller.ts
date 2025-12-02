@@ -89,7 +89,7 @@ export class TeacherController {
       where: query.query ? { name: ILike(`%${query.query}%`) } : {},
       skip: query.page,
       take: query.pageSize,
-      relations: { groups: true },
+      relations: { groups: true, specifications: true },
     });
   }
 

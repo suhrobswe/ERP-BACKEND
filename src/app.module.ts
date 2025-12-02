@@ -12,6 +12,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { VideoModule } from './api/video/video.module';
 import { AuthModule } from './api/auth/auth.module';
 import { StatisticModule } from './api/statistic/statistic.module';
+import { SpecificationModule } from './api/specification/specification.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { StatisticModule } from './api/statistic/statistic.module';
     GroupModule,
     AuthModule,
     StatisticModule,
+    SpecificationModule
     // VideoModule,
   ],
   controllers: [],

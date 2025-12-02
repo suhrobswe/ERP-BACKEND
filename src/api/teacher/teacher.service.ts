@@ -3,13 +3,14 @@ import {
   ConflictException,
   HttpException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { BaseService } from 'src/infrastructure';
-import { TeacherEntity } from 'src/core';
+import { SpecificationEntity, TeacherEntity } from 'src/core';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { successRes } from 'src/infrastructure/response/success.response';
 import { CryptoService } from 'src/infrastructure/crypto/crypto.service';
 import { UpdateTeacherDtoForAdmin } from './dto/update-teacher-for-admin.dto';
@@ -31,6 +32,8 @@ export class TeacherService extends BaseService<
   constructor(
     @InjectRepository(TeacherEntity)
     private readonly teacherRepo: Repository<TeacherEntity>,
+    @InjectRepository(SpecificationEntity)
+    private readonly specificationRepo: Repository<SpecificationEntity>,
     private readonly cryptoService: CryptoService,
     private readonly tokenService: TokenService,
   ) {
@@ -47,8 +50,18 @@ export class TeacherService extends BaseService<
       createTeacherDto.password,
     );
 
+    const specification = await this.specificationRepo.findBy({
+      id: In(createTeacherDto.specification),
+    });
+    if (specification.length === 0) {
+      throw new BadRequestException('Specification not found');
+    }
+
     const newTeacher = await this.teacherRepo.save(
-      this.teacherRepo.create(createTeacherDto),
+      this.teacherRepo.create({
+        ...createTeacherDto,
+        specifications: specification,
+      }),
     );
     return successRes(newTeacher, 201);
   }
@@ -86,37 +99,53 @@ export class TeacherService extends BaseService<
     });
   }
 
-  async updateForAdmin(id: string, updateTeacherDto: UpdateTeacherDtoForAdmin) {
-    const existingTeacher = await this.findOneById(id);
+  async updateForAdmin(id: string, dto: UpdateTeacherDtoForAdmin) {
+    const teacher = await this.teacherRepo.findOne({
+      where: { id },
+      relations: ['specifications'], // ManyToMany relation ni yuklaymiz
+    });
+    if (!teacher) throw new HttpException('Teacher not found', 404);
 
-    if (updateTeacherDto.username) {
+    if (dto.username) {
       const existsUsername = await this.teacherRepo.findOne({
-        where: { username: updateTeacherDto.username, id: Not(id) },
+        where: { username: dto.username, id: Not(id) },
       });
-      if (existsUsername) {
-        throw new ConflictException({
-          message: 'Username already exists',
-          field: 'username',
-        });
-      }
+      if (existsUsername)
+        throw new ConflictException('Username already exists');
     }
 
-    if (updateTeacherDto.password) {
-      updateTeacherDto.password = await this.cryptoService.encrypt(
-        updateTeacherDto.password,
-      );
+    let specifications = teacher.specifications;
+    if (dto.specification && dto.specification.length) {
+      specifications = await this.specificationRepo.findBy({
+        id: In(dto.specification),
+      });
+
+      if (!specifications.length)
+        throw new BadRequestException('Specifications not found');
+    }
+
+    if (dto.password) {
+      dto.password = await this.cryptoService.encrypt(dto.password);
     }
 
     const updatingTeacher = await this.teacherRepo.save({
-      ...existingTeacher.data,
-      ...updateTeacherDto,
+      ...teacher,
+      ...dto,
+      specifications,
     });
+
     return successRes(updatingTeacher);
   }
 
   async updateForTeacher(id: string, dto: UpdateTeacherDto) {
-    const teacher = await this.findOneById(id);
+    // 1️⃣ Teacher topish
+    const teacher = await this.teacherRepo.findOne({
+      where: { id },
+      relations: ['specifications'], // ManyToMany relationni yuklaymiz
+    });
+    if (!teacher) throw new HttpException('Teacher not found', 404);
 
+    // 2️⃣ Username tekshirish
     if (dto.username) {
       const existsUsername = await this.teacherRepo.findOne({
         where: { username: dto.username, id: Not(id) },
@@ -129,10 +158,23 @@ export class TeacherService extends BaseService<
       }
     }
 
+    // 3️⃣ Specifications tekshirish
+    let specifications = teacher.specifications; // eski specifications
+    if (dto.specification && dto.specification.length) {
+      specifications = await this.specificationRepo.findBy({
+        id: In(dto.specification),
+      });
+
+      if (!specifications.length)
+        throw new BadRequestException('Specifications not found');
+    }
+
     const updatingTeacher = await this.teacherRepo.save({
-      ...teacher.data,
+      ...teacher,
       ...dto,
+      specifications,
     });
+
     return successRes(updatingTeacher);
   }
 
@@ -159,24 +201,24 @@ export class TeacherService extends BaseService<
     return successRes(updated);
   }
 
-    async updateAvatar(id: string, file: Express.Multer.File): Promise<ISuccess> {
-      const teacher = await this.teacherRepo.findOne({ where: { id } });
-      if (!teacher) throw new HttpException('Teacher not found', 404);
-  
-      const avatarUrl = join('/uploads', file.filename);
-      const deletedAvatarUrl = join(process.cwd(), teacher.avatarUrl);
-  
-      if (existsSync(deletedAvatarUrl)) {
-        unlinkSync(deletedAvatarUrl);
-      }
-  
-      await this.teacherRepo.update(id, { avatarUrl });
-  
-      const updatedTeacher = await this.teacherRepo.findOne({ where: { id } });
-      return successRes(updatedTeacher);
+  async updateAvatar(id: string, file: Express.Multer.File): Promise<ISuccess> {
+    const teacher = await this.teacherRepo.findOne({ where: { id } });
+    if (!teacher) throw new HttpException('Teacher not found', 404);
+
+    const avatarUrl = join('/uploads', file.filename);
+    const deletedAvatarUrl = join(process.cwd(), teacher.avatarUrl);
+
+    if (existsSync(deletedAvatarUrl)) {
+      unlinkSync(deletedAvatarUrl);
     }
 
-    async deleteAvatar(id: string): Promise<ISuccess> {
+    await this.teacherRepo.update(id, { avatarUrl });
+
+    const updatedTeacher = await this.teacherRepo.findOne({ where: { id } });
+    return successRes(updatedTeacher);
+  }
+
+  async deleteAvatar(id: string): Promise<ISuccess> {
     const teacher = await this.teacherRepo.findOne({ where: { id } });
     if (!teacher) throw new HttpException('Teacher not found', 404);
 

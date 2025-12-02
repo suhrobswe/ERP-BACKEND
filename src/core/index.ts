@@ -6,3 +6,4 @@ export * from './entity/student.entity';
 export * from './entity/lesson.entity';
 export * from './entity/video.entity';
 export * from './entity/document.entity';
+export * from "./entity/specification.entity"
