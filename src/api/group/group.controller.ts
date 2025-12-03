@@ -22,6 +22,7 @@ import { CurrentUser } from 'src/common/decorator/currentUser.decorator';
 import { type IToken } from 'src/infrastructure/token/interface';
 import { RolesGuard } from 'src/common/guard/RolesGuard';
 import { AuthGuard } from 'src/common/guard/AuthGuard';
+import { StatusDto } from '../teacher/dto/status.dto';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('group')
@@ -47,10 +48,11 @@ export class GroupController {
       where: query.query ? { name: ILike(`%${query.query}%`) } : {},
       skip: query.page,
       take: query.pageSize,
+      relations: { teacher: true, students: true },
     });
   }
 
-  @Get('for-admin:id')
+  @Get('for-admin/:id')
   @ApiOperation({ summary: 'Get group by id for admins and superadmins' })
   @accessRoles(Roles.ADMIN, Roles.SUPER_ADMIN)
   @ApiBearerAuth()
@@ -60,7 +62,7 @@ export class GroupController {
     });
   }
 
-  @Get('for-teacher:id')
+  @Get('for-teacher/:id')
   @ApiOperation({ summary: 'Get group by id for teachers ' })
   @accessRoles(Roles.TEACHER)
   @ApiBearerAuth()
@@ -80,6 +82,13 @@ export class GroupController {
     @CurrentUser() user: IToken,
   ) {
     return this.groupService.findForStudent(user.id, id);
+  }
+
+  @Patch('status/:id')
+  @ApiBearerAuth()
+  @accessRoles(Roles.ADMIN, Roles.SUPER_ADMIN)
+  updateStatus(@Param('id') id: string, @Body() dto: StatusDto) {
+    return this.groupService.updateStatusIsActive(id, dto);
   }
 
   @Patch('soft-delete/:id')

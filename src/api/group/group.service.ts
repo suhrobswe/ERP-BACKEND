@@ -8,6 +8,7 @@ import { BaseService } from 'src/infrastructure';
 import { TeacherService } from '../teacher/teacher.service';
 import { successRes } from 'src/infrastructure/response/success.response';
 import { ISuccess } from 'src/infrastructure/pagination/successResponse';
+import { StatusDto } from '../teacher/dto/status.dto';
 
 @Injectable()
 export class GroupService extends BaseService<
@@ -95,5 +96,22 @@ export class GroupService extends BaseService<
     const saved = await this.groupRepo.save(updatedGroup);
 
     return successRes(saved, 200);
+  }
+
+  async updateStatusIsActive(id: string, dto: StatusDto) {
+    const group = await this.groupRepo.findOne({ where: { id } });
+
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+
+    group.isActive = dto.isActive;
+
+    await this.groupRepo.save(group);
+
+    return {
+      message: `group status updated to ${dto.isActive ? 'Active' : 'Blocked'}`,
+      group,
+    };
   }
 }

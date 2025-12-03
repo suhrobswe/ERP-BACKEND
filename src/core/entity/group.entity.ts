@@ -9,8 +9,14 @@ export class GroupEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'date' })
-  lessonTime: Date;
+  @Column({ type: 'time' })
+  startTime: string;
+
+  @Column({ type: 'time' })
+  endTime: string;
+
+  @Column({ type: 'int', default: 1 })
+  durationInMonths: number;
 
   @OneToMany(() => StudentEntity, (student) => student.group)
   students: StudentEntity[];
