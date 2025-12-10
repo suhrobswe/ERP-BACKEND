@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupEntity } from 'src/core';
@@ -40,22 +44,45 @@ export class GroupService extends BaseService<
     return this.create(createGroupDto);
   }
 
-  async findForTeacher(teacherId: string, groupId: string) {
-    const group = await this.groupRepo
-      .createQueryBuilder('group')
-      .leftJoinAndSelect('group.students', 'student')
-      .leftJoinAndSelect('group.teacher', 'teacher')
-      .where('group.id = :groupId', { groupId })
-      .andWhere('group.teacherId = :teacherId', { teacherId })
+  async findAllForTeacher(teacherId: string) {
+    const groups = await this.groupRepo
+      .createQueryBuilder('g')
+      .leftJoinAndSelect('g.students', 'student')
+      .leftJoinAndSelect('g.teacher', 'teacher')
+      .where('g.teacherId = :teacherId', { teacherId })
       .select([
-        'group.id',
-        'group.name',
-        'group.lessonTime',
+        'g.id',
+        'g.name',
         'teacher.id',
         'teacher.name',
+        'student.id',
+        'student.name',
+      ])
+      .getMany();
+
+    return successRes(groups);
+  }
+
+  async findOneForTeacher(teacherId: string, groupId: string) {
+    const group = await this.groupRepo
+      .createQueryBuilder('g')
+      .leftJoinAndSelect('g.students', 'student')
+      .leftJoinAndSelect('g.teacher', 'teacher')
+      .where('g.id = :groupId', { groupId })
+      .andWhere('g.teacherId = :teacherId', { teacherId })
+      .select([
+        'g.id',
+        'g.name',
+        'teacher.id',
+        'teacher.name',
+        'student.id',
         'student.name',
       ])
       .getOne();
+
+    if (!group) {
+      throw new ForbiddenException("You don't have access to this group");
+    }
 
     return successRes(group);
   }

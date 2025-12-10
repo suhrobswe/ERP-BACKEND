@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { GroupEntity } from './group.entity';
 import { Exclude } from 'class-transformer';
@@ -29,6 +29,9 @@ export class StudentEntity extends BaseEntity {
 
   @Column({ type: 'varchar', default: '' })
   avatarUrl: string;
+
+  @Column({ type: 'int', nullable: true })
+  level: number;
 
   @Column({ type: 'uuid', nullable: true })
   groupId: string;

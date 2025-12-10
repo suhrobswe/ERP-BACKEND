@@ -22,6 +22,7 @@ import { IToken } from 'src/infrastructure/token/interface';
 import { UpdatePasswordDto } from 'src/common/dto/update-password.dto';
 import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
+import { UpdateLevelDto } from './dto/updatLevel.dto';
 
 @Injectable()
 export class StudentService extends BaseService<
@@ -87,6 +88,15 @@ export class StudentService extends BaseService<
     });
   }
 
+  async findTopStudent(): Promise<ISuccess> {
+    const student = await this.studentRepo.find({
+      order: { level: 'DESC' },
+      take: 10,
+    });
+
+    return successRes(student);
+  }
+
   async updateStudentForAdmin(id: string, dto: UpdateStudentDtoForAdmin) {
     const student = await this.studentRepo.findOne({ where: { id } });
 
@@ -148,23 +158,45 @@ export class StudentService extends BaseService<
   }
 
   async updateAvatar(id: string, file: Express.Multer.File): Promise<ISuccess> {
-      const student = await this.studentRepo.findOne({ where: { id } });
-      if (!student) throw new HttpException('Student not found', 404);
-  
-      const avatarUrl = join('/uploads', file.filename);
-      const deletedAvatarUrl = join(process.cwd(), student.avatarUrl);
-  
-      if (existsSync(deletedAvatarUrl)) {
-        unlinkSync(deletedAvatarUrl);
-      }
-  
-      await this.studentRepo.update(id, { avatarUrl });
-  
-      const updatedStudent = await this.studentRepo.findOne({ where: { id } });
-      return successRes(updatedStudent);
+    const student = await this.studentRepo.findOne({ where: { id } });
+    if (!student) throw new HttpException('Student not found', 404);
+
+    const avatarUrl = join('/uploads', file.filename);
+    const deletedAvatarUrl = join(process.cwd(), student.avatarUrl);
+
+    if (existsSync(deletedAvatarUrl)) {
+      unlinkSync(deletedAvatarUrl);
     }
 
-    async deleteAvatar(id: string): Promise<ISuccess> {
+    await this.studentRepo.update(id, { avatarUrl });
+
+    const updatedStudent = await this.studentRepo.findOne({ where: { id } });
+    return successRes(updatedStudent);
+  }
+
+  async updateLevel(id: string, dto: UpdateLevelDto) {
+    const student = await this.studentRepo.findOne({ where: { id } });
+
+    if (!student) throw new NotFoundException('Student not found');
+
+    if (dto.level) {
+      if (dto.level > 5 || dto.level < 1)
+        throw new BadRequestException('Rating between 1 and 5');
+
+      const updatedLevel = await this.studentRepo.update(id, {
+        level: dto.level,
+      });
+
+      const updatedStudent = await this.studentRepo.findOne({
+        where: { id },
+        relations: { group: true },
+      });
+
+      return successRes({ updatedStudent });
+    }
+  }
+
+  async deleteAvatar(id: string): Promise<ISuccess> {
     const teacher = await this.studentRepo.findOne({ where: { id } });
     if (!teacher) throw new HttpException('Teacher not found', 404);
 

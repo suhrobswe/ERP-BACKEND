@@ -31,6 +31,7 @@ import { type Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { UpdatePasswordDto } from 'src/common/dto/update-password.dto';
 import { ApiImageFile } from 'src/common/decorator/upload.decorator';
+import { UpdateLevelDto } from './dto/updatLevel.dto';
 
 @UseGuards(AuthGuard, RolesGuard)
 @ApiBearerAuth()
@@ -79,6 +80,22 @@ export class StudentController {
     });
   }
 
+  @Get('top-student')
+  @accessRoles(Roles.TEACHER)
+  @ApiBearerAuth()
+  findTopStudent() {
+    return this.studentService.findTopStudent();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get student by id for admin and superadmin' })
+  @accessRoles(Roles.ADMIN, Roles.SUPER_ADMIN, Roles.TEACHER)
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.studentService.findOneById(id, {
+      relations: { group: true },
+    });
+  }
+
   @Get('for-admins/:id')
   @ApiOperation({ summary: 'Get student by id for admin and superadmin' })
   @accessRoles(Roles.ADMIN, Roles.SUPER_ADMIN)
@@ -91,7 +108,7 @@ export class StudentController {
   @Get('details')
   @ApiOperation({ summary: 'Get student by id for admin and superadmin' })
   @accessRoles(Roles.ADMIN, Roles.SUPER_ADMIN)
-  findOne(@CurrentUser() user: IToken) {
+  findOneDetail(@CurrentUser() user: IToken) {
     return this.studentService.findOneById(user.id);
   }
 
@@ -147,9 +164,19 @@ export class StudentController {
     return this.studentService.updateAvatar(user.id, file);
   }
 
+  @Patch('level/:id')
+  @accessRoles(Roles.TEACHER)
+  @ApiBearerAuth()
+  updateLevel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateLevelDto,
+  ) {
+    return this.studentService.updateLevel(id, dto);
+  }
+
   @Delete('delete-avatar')
   @ApiOperation({ summary: 'Delete avatar' })
-  @accessRoles(Roles.STUDENT,)
+  @accessRoles(Roles.STUDENT)
   @ApiBearerAuth()
   deleteAvatar(@CurrentUser() user: IToken) {
     return this.studentService.deleteAvatar(user.id);

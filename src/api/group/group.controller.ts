@@ -41,7 +41,7 @@ export class GroupController {
   @ApiOperation({
     summary: 'Get all groups with pagination for admins and superadmins',
   })
-  @accessRoles(Roles.ADMIN, Roles.SUPER_ADMIN)
+  @accessRoles(Roles.ADMIN, Roles.SUPER_ADMIN, Roles.TEACHER, 'ID')
   @ApiBearerAuth()
   findAll(@Query() query: PaginationQueryDto) {
     return this.groupService.findAllWithPagination({
@@ -61,6 +61,13 @@ export class GroupController {
       relations: { teacher: true, students: true },
     });
   }
+  @Get('for-teacher')
+  @ApiOperation({ summary: 'Get all groups for a teacher' })
+  @accessRoles(Roles.TEACHER)
+  @ApiBearerAuth()
+  findAllForTeacher(@CurrentUser() user: IToken) {
+    return this.groupService.findAllForTeacher(user.id);
+  }
 
   @Get('for-teacher/:id')
   @ApiOperation({ summary: 'Get group by id for teachers ' })
@@ -70,10 +77,10 @@ export class GroupController {
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: IToken,
   ) {
-    return this.groupService.findForTeacher(user.id, id);
+    return this.groupService.findOneForTeacher(user.id, id);
   }
 
-  @Get('for-student:id')
+  @Get('for-student/:id')
   @ApiOperation({ summary: 'Get group by id for students' })
   @accessRoles(Roles.STUDENT)
   @ApiBearerAuth()
