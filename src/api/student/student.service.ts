@@ -158,19 +158,34 @@ export class StudentService extends BaseService<
   }
 
   async updateAvatar(id: string, file: Express.Multer.File): Promise<ISuccess> {
+    // Studentni topamiz
     const student = await this.studentRepo.findOne({ where: { id } });
     if (!student) throw new HttpException('Student not found', 404);
 
-    const avatarUrl = join('/uploads', file.filename);
-    const deletedAvatarUrl = join(process.cwd(), student.avatarUrl);
+    // Yangi relative URL
+    const relativeUrl = `/uploads/${file.filename}`;
 
-    if (existsSync(deletedAvatarUrl)) {
-      unlinkSync(deletedAvatarUrl);
+    // Full URL frontend uchun
+    const avatarUrl = `http://localhost:4000/api/v1${relativeUrl}`;
+
+    // Eski faylni o'chirish
+    if (student.avatarUrl) {
+      // Old URL dan path olish
+      const oldFilePath = join(
+        process.cwd(),
+        student.avatarUrl.replace('http://localhost:4000/api/v1', ''),
+      );
+      if (existsSync(oldFilePath)) {
+        unlinkSync(oldFilePath);
+      }
     }
 
-    await this.studentRepo.update(id, { avatarUrl });
+    // Studentga yangi URL saqlaymiz
+    student.avatarUrl = avatarUrl;
 
-    const updatedStudent = await this.studentRepo.findOne({ where: { id } });
+    // Repositoryga saqlash
+    const updatedStudent = await this.studentRepo.save(student);
+
     return successRes(updatedStudent);
   }
 

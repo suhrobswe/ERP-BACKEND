@@ -177,7 +177,7 @@ export class TeacherController {
 
     @Patch('update-avatar-teacher/:id')
   @ApiOperation({ summary: 'Update avatar for admin (Universal Upload)' })
-  @accessRoles(Roles.SUPER_ADMIN, Roles.ADMIN)
+  @accessRoles(Roles.SUPER_ADMIN, Roles.ADMIN, Roles.TEACHER)
   @ApiBearerAuth()
   @ApiImageFile('file', true)
   updateAvatarTeacher(

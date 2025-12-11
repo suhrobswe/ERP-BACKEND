@@ -53,6 +53,9 @@ export class GroupService extends BaseService<
       .select([
         'g.id',
         'g.name',
+        'g.startTime',
+        'g.endTime',
+        'g.durationInMonths',
         'teacher.id',
         'teacher.name',
         'student.id',
@@ -73,10 +76,16 @@ export class GroupService extends BaseService<
       .select([
         'g.id',
         'g.name',
+        'g.startTime',
+        'g.endTime',
+        'g.durationInMonths',
         'teacher.id',
         'teacher.name',
         'student.id',
         'student.name',
+        'student.email',
+        'student.isActive',
+        'student.avatarUrl',
       ])
       .getOne();
 
