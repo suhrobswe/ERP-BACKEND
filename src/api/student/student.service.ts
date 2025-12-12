@@ -88,13 +88,15 @@ export class StudentService extends BaseService<
     });
   }
 
-  async findTopStudent(): Promise<ISuccess> {
-    const student = await this.studentRepo.find({
-      order: { level: 'DESC' },
-      take: 10,
-    });
-
-    return successRes(student);
+  async findTeacherTopStudents(teacherId: string): Promise<ISuccess> {
+    const students = await this.studentRepo
+      .createQueryBuilder('student')
+      .innerJoin('student.group', 'group')
+      .innerJoin('group.teacher', 'teacher')
+      .where('teacher.id = :teacherId', { teacherId })
+      .orderBy('student.level', 'DESC')
+      .getMany();
+    return successRes(students);
   }
 
   async updateStudentForAdmin(id: string, dto: UpdateStudentDtoForAdmin) {

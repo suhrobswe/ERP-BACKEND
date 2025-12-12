@@ -83,8 +83,8 @@ export class StudentController {
   @Get('top-student')
   @accessRoles(Roles.TEACHER)
   @ApiBearerAuth()
-  findTopStudent() {
-    return this.studentService.findTopStudent();
+  findTopStudent(@CurrentUser() teacher: IToken) {
+    return this.studentService.findTeacherTopStudents(teacher.id);
   }
 
   @Get(':id')
